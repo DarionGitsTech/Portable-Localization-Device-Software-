@@ -1,38 +1,58 @@
 #include <Arduino.h>
 #include "gps.h"
 #include "imu.h"
+#include "csvlogger.h"
 
 GPSData gpsData;
 IMUData imuData;
+
+char csvHeader = [CSV_BUFFER_SIZE];
+char csvRow = [CSV_BUFFER_SIZE];
+
 
 void setup() {
     Serial.begin(115200);
     delay(1000);
 
-    Serial.println("Initializing GPS...");
-    
+    Serial.println("Initializing system...");
+
     gps_init();
     imu_init();
-}
+
+    if(csvlogger_get_header(csvHeader, sizeof(csvHeader)))
+    {
+        Serial.println(csvHeader);
+    }
+
+    else 
+    {
+        Serial.println("Failed to print CSV header.");
+    }
+} // end void setup()
+
+
 
 void loop() {
-    Serial.println("----- NEW SAMPLE -----");
+    bool gps_ok = gps_update(&gpsData)
+    bool imu_ok = imu_update(&imuData)
 
-    // GPS
-    if (gps_update(&gpsData)) {
-        gps_print(&gpsData);
-        Serial.println("------------------------");
-    } else {
-        Serial.println("GPS update failed.");
+    if(gps_ok && imu_ok)
+    {
+        if(csvlogger_format_row(csvRow, sizeof(csvRow), &gpsData))
+         {
+            Serialprintln(csvRow);
+         }
+
+         else
+         {
+            Serialprintln("Failed to print CSV Row.");
+         }
+    }
+    else 
+    {
+        Serialprintln("Senor update failed.");
     }
 
-    // IMU
-    if (imu_update(&imuData)) {
-        imu_print(&imuData);
-        Serial.println("------------------------");
-    } else {
-        Serial.println("IMU update failed.");
-    }
-
+    
     delay(1000);
 }
