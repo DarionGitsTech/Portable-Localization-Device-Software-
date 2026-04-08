@@ -1,27 +1,49 @@
 #include "lcd.h"
-#include <wire.h>
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Common I2C address is 0x27 or 0x3F
+// Common I2C addresses are 0x27 and 0x3F
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-void lcd_init() {
-  lcd.init();
-  lcd.backlight();
-
-  lcd.setCursor(0, 0);
-  lcd.print("GPS Initializing");
+void lcd_init(void) {
+    lcd.init();
+    lcd.backlight();
+    lcd_show_startup();
 }
 
-void lcd_update(GPSData* data) {
-  lcd.clear();
-
-  if(data->valid) {
+void lcd_show_startup(void) {
+    lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Lat:");
-    lcd.print(data->longitude, 2);
-  } else {
+    lcd.print("GPS Initializing");
+    lcd.setCursor(0, 1);
+    lcd.print("Please wait...");
+}
+
+void lcd_show_no_fix(void) {
+    lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("No GPS Fix");
-  }
+    lcd.setCursor(0, 1);
+    lcd.print("Searching...");
+}
+
+void lcd_update(const GPSData *data) {
+    if (data == nullptr) {
+        lcd_show_no_fix();
+        return;
+    }
+
+    lcd.clear();
+
+    if (data->fix) {
+        lcd.setCursor(0, 0);
+        lcd.print("Lat:");
+        lcd.print(data->latitude, 2);
+
+        lcd.setCursor(0, 1);
+        lcd.print("Lon:");
+        lcd.print(data->longitude, 2);
+    } else {
+        lcd_show_no_fix();
+    }
 }
