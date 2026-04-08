@@ -3,6 +3,7 @@
 #include "imu.h"
 #include "csvlogger.h"
 #include "ble.h"
+#include "lcd.h"
 
 GPSData gpsData;
 IMUData imuData;
@@ -20,6 +21,7 @@ void setup() {
     gps_init();
     imu_init();
     ble_init(9600); // HM-10 usually defaults to 9600 baud
+    lcd_init();
 
     if(csvlogger_get_header(csvHeader, sizeof(csvHeader)))
     {
@@ -38,6 +40,11 @@ void setup() {
 void loop() {
     bool gps_ok = gps_update(&gpsData)
     bool imu_ok = imu_update(&imuData)
+
+    if (gps_ok) 
+    {
+        lcd_update(&gpsData);
+    }
 
     if(gps_ok && imu_ok)
     {
@@ -59,4 +66,4 @@ void loop() {
 
     
     delay(1000);
-}
+} // end void loop()
