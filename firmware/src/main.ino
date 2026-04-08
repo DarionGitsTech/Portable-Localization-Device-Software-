@@ -2,6 +2,7 @@
 #include "gps.h"
 #include "imu.h"
 #include "csvlogger.h"
+#include "ble.h"
 
 GPSData gpsData;
 IMUData imuData;
@@ -18,15 +19,17 @@ void setup() {
 
     gps_init();
     imu_init();
+    ble_init(9600); // HM-10 usually defaults to 9600 baud
 
     if(csvlogger_get_header(csvHeader, sizeof(csvHeader)))
     {
         Serial.println(csvHeader);
+        ble_send_line(csvHeader);
     }
 
     else 
     {
-        Serial.println("Failed to print CSV header.");
+        Serial.println("Failed to create the CSV header.");
     }
 } // end void setup()
 
@@ -38,9 +41,10 @@ void loop() {
 
     if(gps_ok && imu_ok)
     {
-        if(csvlogger_format_row(csvRow, sizeof(csvRow), &gpsData))
+        if(csvlogger_format_row(csvRow, sizeof(csvRow), millis(), &gpsData, &imudata))
          {
             Serialprintln(csvRow);
+            ble_send_line(csvRow);
          }
 
          else
