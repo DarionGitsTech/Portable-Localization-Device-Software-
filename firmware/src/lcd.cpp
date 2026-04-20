@@ -2,13 +2,17 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Common I2C addresses are 0x27 and 0x3F
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void lcd_init(void) {
-    lcd.init();
+    Wire.begin();
+    lcd.begin(16, 2);
     lcd.backlight();
-    lcd_show_startup();
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("GPS Initializing");
+    lcd.setCursor(0, 1);
+    lcd.print("Please wait...");
 }
 
 void lcd_show_startup(void) {
