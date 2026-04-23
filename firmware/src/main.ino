@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "gps.h"
+// INO FILE PROVES THAT GPS LOCK WORKS
 // isolate GPS data for .ino (debugging)
 GPSData gpsData;
 
