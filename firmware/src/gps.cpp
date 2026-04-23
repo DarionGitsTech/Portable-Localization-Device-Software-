@@ -1,6 +1,7 @@
 #include "gps.h"
 #include <Wire.h>
 #include <Adafruit_GPS.h>
+// GPS FILE PROVES GPS LOCK WORKS
 // tester stripped-down code for GPS debugging
 
 static Adafruit_GPS GPS(&Wire);
