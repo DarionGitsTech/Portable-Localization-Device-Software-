@@ -3,6 +3,7 @@
 #include "imu.h"
 #include "lcd.h"
 #include "csvlogger.h"
+#include "ble.h"
 
 // Global sensor data
 GPSData gpsData;
@@ -21,6 +22,7 @@ void setup() {
     gps_init();
     imu_init();
     lcd_init();
+    ble_init(9600);
 
     // Print CSV header once
     if (csvlogger_get_header(csvHeader, sizeof(csvHeader))) {
@@ -75,6 +77,7 @@ void loop() {
         if (gps_ok && imu_ok) {
             if (csvlogger_format_row(csvRow, sizeof(csvRow), &gpsData, &imuData)) {
                 Serial.println(csvRow);
+                ble_send_line(csvRow); // added ble_send_line here
             } else {
                 Serial.println("Failed to format CSV row.");
             }
@@ -82,4 +85,10 @@ void loop() {
             Serial.println("Sensor update failed.");
         }
     }
+    while (ble_available()) {
+    int c = ble_read_char();
+    if (c >= 0) {
+        Serial.print((char)c);
+    }
+} // end while (for text from phone to Serial Monitor)
 }
