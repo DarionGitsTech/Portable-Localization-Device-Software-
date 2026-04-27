@@ -1,1 +1,115 @@
+import PySimpleGUI as sg
+import serial
 
+PORT = 'COM3'
+BAUD = 9600
+
+def connect_serial(port, baud):
+    try:
+        ser = serial.Serial(port, baud, timeout=1)
+        return ser, None
+    except Exception as e:
+        return None, str(e)
+    
+
+state = "MENU"
+data_window = None
+
+# ---------------- START MENU ----------------
+def make_menu():
+    layout = [
+        [sg.Text("Localization Device", font=("Arial", 18))],
+        [sg.Button("Start Display")],
+        [sg.Button("Exit")]
+    ]
+    return sg.Window("Start Menu", layout)
+
+# ---------------- DATA SCREEN ----------------
+def make_data_window():
+    layout = [
+        [sg.Text("Live Data", font=("Arial", 16))],
+        [sg.Button("End Display")],
+        [sg.Button("Exit")],
+
+        [sg.Text("Lat:"), sg.Text("-", key="LAT")],
+        [sg.Text("Lon:"), sg.Text("-", key="LON")],
+        [sg.Text("Alt:"), sg.Text("-", key="ALT")],
+        [sg.Text("Sats:"), sg.Text("-", key="SATS")],
+
+        [sg.Text("Accel:"), sg.Text("-", key="ACCEL")],
+        [sg.Text("Gyro:"), sg.Text("-", key="GYRO")]
+    ]
+    return sg.Window("Data Display", layout)
+
+# ---------------- MAIN LOOP ----------------
+menu_window = make_menu()
+
+while True:
+
+    if state == "MENU":
+        event, values = menu_window.read()
+
+        if event == sg.WINDOW_CLOSED or event == "Exit":
+            break
+
+        if event == "Start Display":
+            menu_window.close()
+            data_window = make_data_window()
+            
+            ser, error = connect_serial(PORT, BAUD)
+            
+            if error:
+                sg.popup("Connection Failed", error)
+                menu_window = make_menu()
+                state = "MENU"
+            else:
+                state = "DATA"
+
+    elif state == "DATA":
+        event, values = data_window.read(timeout=100)
+
+        if event == sg.WINDOW_CLOSED or event == "Exit":
+            break
+
+        # END → go back to menu
+        if event == "End Display":
+            data_window.close()
+            menu_window = make_menu()
+            state = "MENU"
+
+        # Only read serial while in DATA mode
+        try:
+            line = ser.readline().decode(errors="ignore").strip()
+
+            if line == "":
+                continue
+
+            parts = line.split(',')
+
+            if len(parts) >= 10:
+                lat, lon, alt, sats = parts[0:4]
+                ax, ay, az = parts[4:7]
+                gx, gy, gz = parts[7:10]
+
+                data_window["LAT"].update(lat)
+                data_window["LON"].update(lon)
+                data_window["ALT"].update(alt)
+                data_window["SATS"].update(sats)
+
+                data_window["ACCEL"].update(f"{ax}, {ay}, {az}")
+                data_window["GYRO"].update(f"{gx}, {gy}, {gz}")
+
+        except Exception:
+            sg.popup("Lost Connection", "Returning to menu")
+
+            ser.close()
+            data_window.close()
+
+            menu_window = make_menu()
+            state = "MENU"
+
+# cleanup
+if data_window:
+    data_window.close()
+menu_window.close()
+ser.close()
