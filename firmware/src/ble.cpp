@@ -4,7 +4,7 @@
 static bool ble_initialized = false;
 
 bool ble_init(unsigned long baud_rate) {
-    Serial1.begin(baud_rate);
+    Serial7.begin(baud_rate);
     delay(100);
 
     ble_initialized = true;
@@ -16,7 +16,7 @@ void ble_send_string(const char *message) {
         return;
     }
 
-    Serial1.print(message);
+    Serial7.print(message);
 }
 
 void ble_send_line(const char *message) {
@@ -24,7 +24,7 @@ void ble_send_line(const char *message) {
         return;
     }
 
-    Serial1.println(message);
+    Serial7.println(message);
 }
 
 void ble_send_command(const char *command) {
@@ -32,7 +32,7 @@ void ble_send_command(const char *command) {
         return;
     }
 
-    Serial1.print(command);
+    Serial7.print(command);
 }
 
 bool ble_available(void) {
@@ -40,7 +40,7 @@ bool ble_available(void) {
         return false;
     }
 
-    return Serial1.available() > 0;
+    return Serial7.available() > 0;
 }
 
 int ble_read_char(void) {
@@ -48,7 +48,7 @@ int ble_read_char(void) {
         return -1;
     }
 
-    return Serial1.read();
+    return Serial7.read();
 }
 
 bool ble_is_connected(void) {
