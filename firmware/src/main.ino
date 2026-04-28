@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <SD.h>
 #include "gps.h"
 #include "imu.h"
 #include "lcd.h"
@@ -11,6 +12,8 @@ IMUData imuData;
 
 char csvHeader[CSV_BUFFER_SIZE];
 char csvRow[CSV_BUFFER_SIZE];
+
+File logFile;
 
 void setup() {
     Serial.begin(115200);
@@ -29,6 +32,29 @@ void setup() {
         Serial.println(csvHeader);
     } else {
         Serial.println("Failed to create CSV header.");
+    }
+
+    // Initialize SD card
+    if (!SD.begin(BUILTIN_SDCARD)) {
+        Serial.println("SD initialization failed!");
+    } else {
+        Serial.println("SD initialization success.");
+
+        // Open file
+        SD.remove("log.csv");
+        logFile = SD.open("log.csv", FILE_WRITE);
+
+        if (logFile) {
+            Serial.println("Opened log.csv");
+
+            // Write header once
+            if (csvlogger_get_header(csvHeader, sizeof(csvHeader))) {
+                logFile.println(csvHeader);
+                logFile.flush();   // ensure it's written immediately
+            }
+        } else {
+            Serial.println("Failed to open log.csv");
+        }
     }
 }
 
@@ -78,6 +104,12 @@ void loop() {
             if (csvlogger_format_row(csvRow, sizeof(csvRow), &gpsData, &imuData)) {
                 Serial.println(csvRow);
                 ble_send_line(csvRow); // added ble_send_line here
+
+                // Write to SD card
+                if (logFile) {
+                    logFile.println(csvRow);
+                    logFile.flush();
+                }
             } else {
                 Serial.println("Failed to format CSV row.");
             }
@@ -86,9 +118,9 @@ void loop() {
         }
     }
     while (ble_available()) {
-    int c = ble_read_char();
-    if (c >= 0) {
-        Serial.print((char)c);
-    }
-} // end while (for text from phone to Serial Monitor)
+        int c = ble_read_char();
+        if (c >= 0) {
+            Serial.print((char)c);
+        }
+    } // end while (for text from phone to Serial Monitor)
 }
