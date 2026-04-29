@@ -10,7 +10,7 @@ bool csvlogger_get_header(char *buffer, size_t buffer_size) {
     int written = snprintf(
         buffer,
         buffer_size,
-        "latitude,longitude,altitude,satellites,fix,"
+        "date,time,latitude,longitude,altitude,satellites,fix,"
         "accel_x,accel_y,accel_z,"
         "gyro_x,gyro_y,gyro_z,"
         "mag_x,mag_y,mag_z"
@@ -27,13 +27,29 @@ bool csvlogger_format_row(char *buffer,
         return false;
     }
 
+    char dateStr[16];
+    char timeStr[16];
+
+    // Format date: DD/MM/YYYY
+    snprintf(dateStr, sizeof(dateStr), "%02d/%02d/%04d", gps->day, gps->month, gps->year);
+
+    // Format time: HH:MM:SS
+    snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d", gps->hour, gps->minute, gps->seconds);
+
+    if (!gps->fix) {
+        snprintf(dateStr, sizeof(dateStr), "0000/00/00");
+        snprintf(timeStr, sizeof(timeStr), "00:00:00");
+    }
+
     int written = snprintf(
         buffer,
         buffer_size,
-        "%.6f,%.6f,%.2f,%d,%d,"
+        "%s,%s,%.6f,%.6f,%.2f,%d,%d,"
         "%.3f,%.3f,%.3f,"
         "%.3f,%.3f,%.3f,"
         "%.3f,%.3f,%.3f",
+        dateStr,
+        timeStr,
         gps->latitude,
         gps->longitude,
         gps->altitude,
