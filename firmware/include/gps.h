@@ -2,6 +2,7 @@
 #define GPS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
     float latitude;
@@ -9,6 +10,14 @@ typedef struct {
     float altitude;
     int satellites;
     bool fix;
+
+    // Date and Time
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t seconds;
 } GPSData;
 
 void gps_init(void);
