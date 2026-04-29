@@ -15,6 +15,13 @@ void gps_init(void) {
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
     GPS.sendCommand(PGCMD_ANTENNA);
 
+    currentData.day = 0;
+    currentData.month = 0;
+    currentData.year = 0;
+    currentData.hour = 0;
+    currentData.minute = 0;
+    currentData.seconds = 0;
+
     currentData.latitude = 0.0f;
     currentData.longitude = 0.0f;
     currentData.altitude = 0.0f;
@@ -73,6 +80,13 @@ bool gps_update(GPSData *data) {
     // Update struct (same as before)
     currentData.fix = GPS.fix;
     currentData.satellites = GPS.satellites;
+
+    currentData.day = GPS.day;
+    currentData.month = GPS.month;
+    currentData.year = GPS.year + 2000;
+    currentData.hour = GPS.hour;
+    currentData.minute = GPS.minute;
+    currentData.seconds = GPS.seconds;
 
     if (GPS.fix) {
         currentData.latitude = GPS.latitudeDegrees;
